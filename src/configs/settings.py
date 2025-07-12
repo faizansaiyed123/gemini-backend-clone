@@ -2,10 +2,11 @@
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 from os.path import join, dirname, abspath
-
+import os
 # Load the .env file
 env_file = join(dirname(abspath(__file__)), "..", ".env")  
-load_dotenv(env_file, override=True)  
+if not os.getenv("RENDER"):  
+    load_dotenv(env_file, override=True)  
 class Settings(BaseSettings):
     """
     Use this class for adding constants from .env file
@@ -15,8 +16,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     GMAIL_USERNAME: str
     GMAIL_PASSWORD: str
-    PORT: int = 8000  # Default port if not defined in .env
-    SERVER_TIMEOUT: int = 60  # Default timeout if not defined in .env
+    PORT: int = 8000  
+    SERVER_TIMEOUT: int = 60  
     UPSTASH_REDIS_REST_TOKEN: str
     UPSTASH_REDIS_REST_URL: str
     OPENAI_API_KEY:str
@@ -29,7 +30,7 @@ class Settings(BaseSettings):
 
 
     class Config:
-        env_file = env_file  # Specify the .env file to load
+        env_file = env_file 
         extra = "allow"
 
 settings = Settings()
