@@ -21,9 +21,9 @@ def subscribe_pro_service(user_id: str, db: Session, request: Request):
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             mode='subscription',
-            customer_email=None,  # Optionally pass user's email
+            customer_email=None, 
             line_items=[{
-                'price': settings.STRIPE_PRICE_ID,  # From Stripe dashboard
+                'price': settings.STRIPE_PRICE_ID,  
                 'quantity': 1,
             }],
             client_reference_id=user_id,
