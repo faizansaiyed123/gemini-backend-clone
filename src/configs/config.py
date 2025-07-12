@@ -1,8 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import os
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-
-DATABASE_URL = "postgresql://gemini_sp7e_user:vMIEXSVAfR7TXXjhQlBc5q31jdYGexYm@dpg-d1p28cs9c44c7385ctmg-a/gemini_sp7e"
 
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
