@@ -15,20 +15,18 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 def subscribe_pro_service(user_id: str, db: Session, request: Request):
     api_name = "subscribe_pro"
     try:
-        YOUR_DOMAIN = settings.FRONTEND_URL or "http://localhost:3000"
-
+        YOUR_DOMAIN = settings.FRONTEND_URL or "https://gemini-backend-q94y.onrender.com/payment/success"
         
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             mode='subscription',
-            customer_email=None, 
             line_items=[{
-                'price': settings.STRIPE_PRICE_ID,  
+                'price': settings.STRIPE_PRICE_ID,
                 'quantity': 1,
             }],
             client_reference_id=user_id,
             metadata={"user_id": user_id},
-            success_url=f"{YOUR_DOMAIN}/payment/success?session_id={{CHECKOUT_SESSION_ID}}",
+            success_url=f"{YOUR_DOMAIN}/payment/success",
             cancel_url=f"{YOUR_DOMAIN}/payment/cancel",
         )
 

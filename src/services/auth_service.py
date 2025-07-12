@@ -16,10 +16,10 @@ from src.schemas.auth import ChangePasswordRequest ,ResetPasswordRequest
 app_response = AppResponse()
 tables = Tables()
 
+
 def signup_service(user, db: Session):
     api_name = "signup"
-    tables = Tables()
-
+    
     try:
         log_message("info", "API called: signup_service", data={"mobile": user.mobile}, api_name=api_name)
 
@@ -28,7 +28,7 @@ def signup_service(user, db: Session):
             app_response.set_response(AppConstants.CODE_INVALID_REQUEST, {}, Messages.VALIDATE_DATA, False)
             return app_response
 
-        # Check if user already exists
+
         existing_user = db.execute(
             select(tables.users).where(tables.users.c.mobile == user.mobile)
         ).fetchone()
@@ -38,7 +38,6 @@ def signup_service(user, db: Session):
             app_response.set_response(AppConstants.CODE_CONFLICT, {}, Messages.MOBILE_ALREADY_EXISTS, False)
             return app_response
 
-        # Create new user
         user_id = str(uuid.uuid4())
         hashed_password = bcrypt.hash(user.password)
 
@@ -53,7 +52,6 @@ def signup_service(user, db: Session):
         )
         db.commit()
 
-        # Generate JWT Token
         token = create_access_token({"sub": user_id})
 
         log_message("success", "User registered", data={"user_id": user_id}, api_name=api_name)
@@ -79,8 +77,7 @@ def signup_service(user, db: Session):
 
 def send_otp_service(user, db: Session):
     api_name = "send_otp"
-    tables = Tables()
-
+    
     try:
         log_message("info", "API called: send_otp_service", data={"mobile": user.mobile}, api_name=api_name)
 
@@ -132,7 +129,7 @@ def send_otp_service(user, db: Session):
 
 def verify_otp_service(payload, db: Session):
     api_name = "verify_otp"
-    tables = Tables()
+    
 
     try:
         log_message("info", "API called: verify_otp_service", data={"mobile": payload.mobile}, api_name=api_name)
@@ -179,7 +176,7 @@ def verify_otp_service(payload, db: Session):
 
 def forgot_password_service(user, db: Session):
     api_name = "forgot_password"
-    tables = Tables()
+    
 
     try:
         log_message("info", "API called: forgot_password_service", data={"mobile": user.mobile}, api_name=api_name)
@@ -231,7 +228,7 @@ def forgot_password_service(user, db: Session):
 
 def change_password_service(user_id: str, request: ChangePasswordRequest, db: Session):
     api_name = "change_password"
-    tables = Tables()
+    
 
     try:
         log_message("info", "API called: change_password_service", data={"user_id": user_id}, api_name=api_name)
@@ -292,7 +289,7 @@ def change_password_service(user_id: str, request: ChangePasswordRequest, db: Se
 
 def reset_password_service(user_id: str, request: ResetPasswordRequest, db: Session):
     api_name = "reset_password"
-    tables = Tables()
+    
 
     try:
         log_message("info", "API called: reset_password_service", data={"user_id": user_id}, api_name=api_name)
