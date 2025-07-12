@@ -17,7 +17,7 @@ def subscribe_pro_service(user_id: str, db: Session, request: Request):
     try:
         YOUR_DOMAIN = settings.FRONTEND_URL or "http://localhost:3000"
 
-        # Create Stripe Checkout session
+        
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             mode='subscription',
