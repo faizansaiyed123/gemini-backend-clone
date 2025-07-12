@@ -6,6 +6,6 @@ CREATE TABLE IF NOT EXISTS users (
     otp_created_at TIMESTAMP,
     password_hash TEXT,
     is_verified BOOLEAN DEFAULT FALSE,
-    subscription_tier VARCHAR(10) DEFAULT 'basic'
+    subscription_tier VARCHAR(10) DEFAULT 'basic',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
