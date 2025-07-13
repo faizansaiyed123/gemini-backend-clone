@@ -19,10 +19,34 @@ Instead of Google Gemini, this implementation uses the **OpenAI API (GPT-3.5-tur
 - AI responses are processed via a **Redis-based async queue**.
 
 ### AI Integration (OpenAI + Redis Queue)
-- This project uses OpenAI (GPT-3.5-turbo) in place of Gemini, which can be easily replaced if needed.
-- Uses `openai.ChatCompletion` to get GPT-3.5-turbo replies.
-- AI requests are handled asynchronously using a **custom Redis-based queue system** (Upstash Redis REST API).
-- A background Python worker continuously polls this queue and stores AI responses.
+
+This project uses **OpenAI (GPT-3.5-turbo)** as a drop-in replacement for **Google Gemini**, fulfilling the same purpose of generating AI responses for user messages.
+
+AI requests are handled asynchronously using a **custom Redis-based queue system** (via Upstash REST API), making it suitable for cloud deployment and decoupled processing.
+
+---
+
+#### ⚠️ Why OpenAI Instead of Gemini?
+
+> **Note on Gemini API Compatibility:**
+
+While the original assignment mentions integrating with the **Google Gemini API**, this implementation uses **OpenAI GPT-3.5** instead — with **zero compromise on architecture or async processing logic**.
+
+This decision was made due to the following reasons:
+
+- **Gemini API requires a verified Google Cloud project and billing setup**, which isn't ideal for rapid development or testing in a sandbox environment.
+
+- **OpenAI offers easier free-tier access**, which allowed us to build, test, and validate the queue and worker system effectively.
+- The architecture is built to be **modular and provider-agnostic** — meaning:
+  - The queue (`Redis`)
+  - Async message processing (`worker.py`)
+  - AI message storage and structure
+  - Response pipeline
+  ...are all fully compatible with Gemini.
+- To use Gemini instead of OpenAI, only the **model call logic** inside the worker needs to be swapped (e.g., `openai.ChatCompletion` → Gemini HTTP request).
+
+**Conclusion**:  
+This project simulates the Gemini integration using OpenAI, while keeping the backend architecture fully aligned with the assignment’s technical requirements and ready for future Gemini integration if needed.
 
 ###  Subscriptions via Stripe
 - Basic: 5 messages/day.
@@ -66,7 +90,7 @@ This approach meets the async queue requirement while keeping the stack lean and
 ### 1. Clone the Project
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-chat-backend.git
+1. git clone https://github.com/YOUR_USERNAME/ai-chat-backend.git
 cd ai-chat-backend
 
 
@@ -89,9 +113,10 @@ pip install -r requirements.txt
 Ensure PostgreSQL is installed and a database is created.
 Ensure Redis is installed and running locally on localhost:6379.
 
-4. Create a .env File
+4. 4. Create a `.env` File in the root directory
 # Database
 DATABASE_URL=postgresql://postgres:your_password@localhost:5432/gemini
+
 
 # JWT
 SECRET_KEY=your_jwt_secret_key
@@ -122,13 +147,14 @@ STRIPE_PRICE_ID=your_stripe_price_id
 PORT=8000
 SERVER_TIMEOUT=200
 
-
+After following all the above instructions, run the following command:
 
 5. Start the FastAPI Server
 uvicorn main:app --reload
 
+This will start both the FastAPI server and the background worker for queue processing automatically.
 
-
+The worker is launched in a background thread using FastAPI's startup event and processes queued AI messages asynchronously.
 ---
 
 🧪 API Testing with Postman
@@ -145,7 +171,7 @@ After import:
 
 Go to the Environments tab in Postman.
 
-Activate the environment named chatroom by clicking the ✅ checkmark.
+Activate the environment named Chatroom by clicking the ✅ checkmark.
 
 Step 2: Import the Collection File
 
