@@ -18,8 +18,11 @@ Instead of Google Gemini, this implementation uses the **OpenAI API (GPT-3.5-tur
 - Conversations are stored in the database.
 - AI responses are processed via a **Redis-based async queue**.
 
-###  AI Integration (OpenAI)
+### AI Integration (OpenAI + Redis Queue)
+- This project uses OpenAI (GPT-3.5-turbo) in place of Gemini, which can be easily replaced if needed.
 - Uses `openai.ChatCompletion` to get GPT-3.5-turbo replies.
+- AI requests are handled asynchronously using a **custom Redis-based queue system** (Upstash Redis REST API).
+- A background Python worker continuously polls this queue and stores AI responses.
 
 ###  Subscriptions via Stripe
 - Basic: 5 messages/day.
@@ -32,6 +35,29 @@ Instead of Google Gemini, this implementation uses the **OpenAI API (GPT-3.5-tur
 
 ###  Caching
 - `GET /chatroom` is cached using Redis for 5–10 minutes to improve performance.
+
+### Queue System Explanation
+
+To manage AI response processing asynchronously, this project implements a **custom message queue** using **Redis Lists** (via [Upstash Redis REST API](https://upstash.com/)):
+
+- Messages are pushed to a Redis list using `LPUSH`.
+- A worker service polls messages using `RPOP`.
+- This simulates a lightweight message queue without requiring a broker like RabbitMQ.
+- Benefits:
+  - Easier cloud deployment (Upstash is serverless and HTTP-based).
+  - No extra infrastructure needed (e.g., Celery or RabbitMQ servers).
+  - Queue operations logged and validated.
+
+**Note**: Celery or RabbitMQ were not used in favor of a custom Redis-based queue (via Upstash REST API) to ensure easy deployment and reduce infrastructure complexity — while still fulfilling all async processing requirements.
+
+This approach meets the async queue requirement while keeping the stack lean and cloud-friendly.
+
+### Assumptions / Design Decisions
+
+- Instead of Celery or RabbitMQ, we used a **custom Redis-based queue** due to:
+  - Ease of deployment on platforms like Render or Railway.
+  - Less operational overhead.
+  - Fully sufficient for this use case.
 
 ---
 
@@ -100,7 +126,3 @@ SERVER_TIMEOUT=200
 
 5. Start the FastAPI Server
 uvicorn main:app --reload
-
-
-6. Start the Background Worker
-python -m src.services.worker

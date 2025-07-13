@@ -7,11 +7,12 @@ from sqlalchemy import update
 from src.common.app_response import AppResponse
 from src.common.app_constants import AppConstants
 from src.common.messages import Messages
-import random
+import secrets
 from src.utils.token import create_access_token
 from passlib.hash import bcrypt
 from datetime import datetime, timedelta
 from src.logs.logger import log_message
+from src.configs.settings import settings
 from src.schemas.auth import ChangePasswordRequest ,ResetPasswordRequest
 app_response = AppResponse()
 tables = Tables()
@@ -77,7 +78,7 @@ def signup_service(user, db: Session):
 
 def send_otp_service(user, db: Session):
     api_name = "send_otp"
-    
+
     try:
         log_message("info", "API called: send_otp_service", data={"mobile": user.mobile}, api_name=api_name)
 
@@ -95,12 +96,33 @@ def send_otp_service(user, db: Session):
             )
             return app_response
 
-        otp = str(random.randint(100000, 999999))
+        user_data = result._mapping
+        now = datetime.utcnow()
+
+        #  Check cooldown
+        last_sent = user_data.get("otp_last_sent_at")
+        if last_sent and (now - last_sent).total_seconds() < settings.OTP_RESEND_INTERVAL_SECONDS:
+            wait_time = int(settings.OTP_RESEND_INTERVAL_SECONDS - (now - last_sent).total_seconds())
+            log_message("warning", "OTP resend cooldown active", data={"wait_time": wait_time}, api_name=api_name)
+            app_response.set_response(
+                AppConstants.CODE_TOO_MANY_REQUESTS,
+                {"wait_time": wait_time},
+                f"Please wait {wait_time} seconds before requesting another OTP.",
+                Messages.FALSE
+            )
+            return app_response
+
+        otp = str(secrets.randbelow(10**6)).zfill(6)
 
         db.execute(
             update(tables.users)
             .where(tables.users.c.mobile == user.mobile)
-            .values(otp_code=otp, otp_created_at=datetime.utcnow())
+            .values(
+                otp_code=otp,
+                otp_created_at=now,
+                otp_last_sent_at=now,
+                otp_attempts=0  # Reset attempts on resend
+            )
         )
         db.commit()
 
@@ -124,12 +146,8 @@ def send_otp_service(user, db: Session):
         )
         return app_response
 
-
-
-
 def verify_otp_service(payload, db: Session):
     api_name = "verify_otp"
-    
 
     try:
         log_message("info", "API called: verify_otp_service", data={"mobile": payload.mobile}, api_name=api_name)
@@ -145,27 +163,69 @@ def verify_otp_service(payload, db: Session):
 
         user = result._mapping
 
+        # Check max attempt limit
+        if user["otp_attempts"] is not None and user["otp_attempts"] >= settings.MAX_OTP_ATTEMPTS:
+            log_message("warning", "OTP attempt limit exceeded", data={"mobile": payload.mobile}, api_name=api_name)
+            app_response.set_response(
+                AppConstants.CODE_LOCKED,
+                {},
+                "Too many incorrect OTP attempts. Please request a new OTP.",
+                Messages.FALSE
+            )
+            return app_response
+
         if user["otp_code"] != payload.otp:
-            app_response.set_response(AppConstants.CODE_INVALID_REQUEST, {}, Messages.OTP_INCORRECT_OR_EXPIRED, Messages.FALSE)
+            # Increment otp_attempts
+            db.execute(
+                update(tables.users)
+                .where(tables.users.c.mobile == payload.mobile)
+                .values(otp_attempts=(user["otp_attempts"] or 0) + 1)
+            )
+            db.commit()
+
+            log_message("warning", "Invalid OTP entered", data={"mobile": payload.mobile}, api_name=api_name)
+            app_response.set_response(
+                AppConstants.CODE_INVALID_REQUEST,
+                {},
+                Messages.OTP_INCORRECT_OR_EXPIRED,
+                Messages.FALSE
+            )
             return app_response
 
-        if not user["otp_created_at"] or (datetime.utcnow() - user["otp_created_at"]) > timedelta(minutes=5):
-            app_response.set_response(AppConstants.CODE_INVALID_REQUEST, {}, Messages.OTP_INCORRECT_OR_EXPIRED, Messages.FALSE)
+        # Check if OTP is expired
+        if not user["otp_created_at"] or (datetime.utcnow() - user["otp_created_at"]) > timedelta(minutes=settings.OTP_EXPIRY_MINUTES):
+            log_message("warning", "OTP expired", data={"mobile": payload.mobile}, api_name=api_name)
+            app_response.set_response(
+                AppConstants.CODE_INVALID_REQUEST,
+                {},
+                Messages.OTP_INCORRECT_OR_EXPIRED,
+                Messages.FALSE
+            )
             return app_response
 
+        # OTP is valid → update user status
         db.execute(
             update(tables.users)
             .where(tables.users.c.mobile == payload.mobile)
             .values(
                 is_verified=True,
                 otp_code=None,
-                otp_created_at=None
+                otp_created_at=None,
+                otp_last_sent_at=None,
+                otp_attempts=0  # Reset attempts
             )
         )
         db.commit()
 
         access_token = create_access_token({"sub": str(user["id"])})
-        app_response.set_response(AppConstants.CODE_SUCCESS, {"access_token": access_token}, Messages.OTP_VERIFIED_SUCCESSFULLY, Messages.TRUE)
+        log_message("success", "OTP verified and access token issued", data={"mobile": payload.mobile}, api_name=api_name)
+
+        app_response.set_response(
+            AppConstants.CODE_SUCCESS,
+            {"access_token": access_token},
+            Messages.OTP_VERIFIED_SUCCESSFULLY,
+            Messages.TRUE
+        )
         return app_response
 
     except Exception as e:
@@ -195,7 +255,7 @@ def forgot_password_service(user, db: Session):
             )
             return app_response
 
-        otp = str(random.randint(100000, 999999))
+        otp = str(secrets.randbelow(10**6)).zfill(6)
 
         db.execute(
             update(tables.users)

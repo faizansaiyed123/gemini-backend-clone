@@ -3,10 +3,14 @@ from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 from os.path import join, dirname, abspath
 import os
-# Load the .env file
-env_file = join(dirname(abspath(__file__)), "..", ".env")  
+
+
+env_file = join(dirname(abspath(__file__)), "..", ".env")
+  
 if not os.getenv("RENDER"):  
-    load_dotenv(env_file, override=True)  
+    load_dotenv(env_file, override=True) 
+
+
 class Settings(BaseSettings):
     """
     Use this class for adding constants from .env file
@@ -26,6 +30,13 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "https://example.com"
     STRIPE_PRICE_ID:str
     STRIPE_WEBHOOK_SECRET:str
+    OTP_EXPIRY_MINUTES: int = 5
+    OTP_RESEND_INTERVAL_SECONDS: int = 60
+    MAX_OTP_ATTEMPTS: int = 5
+    OTP_RESEND_INTERVAL_SECONDS=60
+
+
+
 
 
 

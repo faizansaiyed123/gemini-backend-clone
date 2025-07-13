@@ -10,7 +10,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from jose.exceptions import JWTError
 from fastapi import HTTPException, Depends , Request, status
-import random
 from fastapi.security import OAuth2PasswordBearer
 from src.common.app_response import AppResponse
 from src.common.app_constants import AppConstants

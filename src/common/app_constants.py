@@ -2,6 +2,7 @@ class AppConstants:
     # Success
     CODE_SUCCESS = 200
     CODE_CREATED = 201
+    CODE_LOCKED = 423
 
     # Client Errors
     CODE_INVALID_REQUEST = 400

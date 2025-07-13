@@ -14,7 +14,6 @@ app_response = AppResponse()
 
 def create_chatroom_service(user_id: str, payload, db):
     api_name = "create_chatroom"
-    tables = Tables()
 
     try:
         log_message("info", "API called: create_chatroom_service", data={"user_id": user_id}, api_name=api_name)
@@ -105,8 +104,7 @@ def list_chatrooms_service(user_id: str, db: Session):
 
 def get_chatroom_details_service(chatroom_id: str, user_id: str, db: Session):
     api_name = "get_chatroom_details"
-    tables = Tables()
-
+    
     try:
         log_message("info", "API called: get_chatroom_details_service", data={"chatroom_id": chatroom_id}, api_name=api_name)
 

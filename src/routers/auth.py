@@ -12,7 +12,7 @@ async def signup(user: UserSignup, db: Session = Depends(get_db)):
     return signup_service(user, db)
 
 
-@router.post("/send-otp")  # 🔁 remove response_model=SendOTPResponse
+@router.post("/send-otp")
 async def send_otp(user: SendOTPRequest, db: Session = Depends(get_db)):
     return send_otp_service(user, db)
 
