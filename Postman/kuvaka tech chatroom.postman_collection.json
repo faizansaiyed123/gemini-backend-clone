@@ -1,0 +1,566 @@
+{
+	"info": {
+		"_postman_id": "76c4ea9b-5bc1-41b5-ac7c-b7cb19d040cf",
+		"name": "kuvaka tech chatroom",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "40438067",
+		"_collection_link": "https://testing-3624.postman.co/workspace/a010194c-5e99-4e86-808a-d8c8d1ffc60c/collection/40438067-76c4ea9b-5bc1-41b5-ac7c-b7cb19d040cf?action=share&source=collection_link&creator=40438067"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Signup",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();\r",
+									"const token = response.token || response.data?.token || response.data?.access_token;\r",
+									"\r",
+									"if (token) {\r",
+									"    pm.environment.set(\"token\", token);\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"1478956547\",\n  \"full_name\": \"test\",\n  \"password\": \"Test@123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://gemini-backend-q94y.onrender.com/auth/signup",
+							"protocol": "https",
+							"host": [
+								"gemini-backend-q94y",
+								"onrender",
+								"com"
+							],
+							"path": [
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Send-OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"1478956547\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://gemini-backend-q94y.onrender.com/auth/send-otp",
+							"protocol": "https",
+							"host": [
+								"gemini-backend-q94y",
+								"onrender",
+								"com"
+							],
+							"path": [
+								"auth",
+								"send-otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify-OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();\r",
+									"const token = response.token || response.data?.token || response.data?.access_token;\r",
+									"\r",
+									"if (token) {\r",
+									"    pm.environment.set(\"token\", token);\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"1478956547\",\n  \"otp\": \"326256\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://gemini-backend-q94y.onrender.com/auth/verify-otp",
+							"protocol": "https",
+							"host": [
+								"gemini-backend-q94y",
+								"onrender",
+								"com"
+							],
+							"path": [
+								"auth",
+								"verify-otp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot-Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"2222222222\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://gemini-backend-q94y.onrender.com/auth/forgot-password",
+							"protocol": "https",
+							"host": [
+								"gemini-backend-q94y",
+								"onrender",
+								"com"
+							],
+							"path": [
+								"auth",
+								"forgot-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change-Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"old_password\": \"Test@123\",\n  \"new_password\": \"Test@123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://gemini-backend-q94y.onrender.com/auth/change-password",
+							"protocol": "https",
+							"host": [
+								"gemini-backend-q94y",
+								"onrender",
+								"com"
+							],
+							"path": [
+								"auth",
+								"change-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reset-Password",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMTkxNTdlZS0xZTg0LTQyMDUtYmM3Yi0yNWE1MjZjY2E1NDciLCJleHAiOjE3NTIzOTg3Mzh9.ZPMR7jP2DEiCpmyyBhfPJq8WyBVmU9UNXOurQq1kaK8",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"new_password\": \"Faiz@123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://gemini-backend-q94y.onrender.com/auth/reset-password",
+							"protocol": "https",
+							"host": [
+								"gemini-backend-q94y",
+								"onrender",
+								"com"
+							],
+							"path": [
+								"auth",
+								"reset-password"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Get-Me",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://gemini-backend-q94y.onrender.com/user/user/me",
+							"protocol": "https",
+							"host": [
+								"gemini-backend-q94y",
+								"onrender",
+								"com"
+							],
+							"path": [
+								"user",
+								"user",
+								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Chatroom",
+			"item": [
+				{
+					"name": "List-Chatrooms",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "https://gemini-backend-q94y.onrender.com/ChatRoom/chatroom",
+							"protocol": "https",
+							"host": [
+								"gemini-backend-q94y",
+								"onrender",
+								"com"
+							],
+							"path": [
+								"ChatRoom",
+								"chatroom"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create-Chatroom",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"this is chatting room\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://gemini-backend-q94y.onrender.com/ChatRoom/chatroom",
+							"protocol": "https",
+							"host": [
+								"gemini-backend-q94y",
+								"onrender",
+								"com"
+							],
+							"path": [
+								"ChatRoom",
+								"chatroom"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get-Chatroom-Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "https://gemini-backend-q94y.onrender.com/ChatRoom/chatroom/a5247a43-c3c6-4544-b08a-05dec659cb7a",
+							"protocol": "https",
+							"host": [
+								"gemini-backend-q94y",
+								"onrender",
+								"com"
+							],
+							"path": [
+								"ChatRoom",
+								"chatroom",
+								"a5247a43-c3c6-4544-b08a-05dec659cb7a"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Message",
+			"item": [
+				{
+					"name": "Send Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"explain me how google works in short way\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://gemini-backend-q94y.onrender.com/message/a5247a43-c3c6-4544-b08a-05dec659cb7a/message",
+							"protocol": "https",
+							"host": [
+								"gemini-backend-q94y",
+								"onrender",
+								"com"
+							],
+							"path": [
+								"message",
+								"a5247a43-c3c6-4544-b08a-05dec659cb7a",
+								"message"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Subscription",
+			"item": [
+				{
+					"name": "Subscribe - Pro",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "https://gemini-backend-q94y.onrender.com/subscribe/pro",
+							"protocol": "https",
+							"host": [
+								"gemini-backend-q94y",
+								"onrender",
+								"com"
+							],
+							"path": [
+								"subscribe",
+								"pro"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Subscription Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "https://gemini-backend-q94y.onrender.com/subscribe/subscription/status",
+							"protocol": "https",
+							"host": [
+								"gemini-backend-q94y",
+								"onrender",
+								"com"
+							],
+							"path": [
+								"subscribe",
+								"subscription",
+								"status"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

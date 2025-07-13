@@ -6,8 +6,10 @@ from src.common.app_response import AppResponse
 from src.common.messages import Messages
 from src.logs.logger import log_message
 
+
 tables = Tables()
 app_response = AppResponse()
+
 
 def get_me_service(current_user_id: str, db: Session):
     api_name = "get_me"

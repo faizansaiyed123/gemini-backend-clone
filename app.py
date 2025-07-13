@@ -9,9 +9,8 @@ from src.routers.user import router as user_router
 from src.routers.chatroom import router as chatroom_router
 from src.routers.message import router as message_router
 from src.routers.subscription import router as subscription_router
-
-# ✅ Import your worker loop function
 from src.services.worker import worker_loop
+
 
 def configure_routes(app: FastAPI) -> None:
     """
@@ -23,12 +22,13 @@ def configure_routes(app: FastAPI) -> None:
     app.include_router(message_router, prefix="/message", tags=["Message"])
     app.include_router(subscription_router , prefix="/subscribe", tags=["Subscription"])
 
+
 def create_app() -> FastAPI:
     """
     Create and configure the FastAPI application.
     """
     app = FastAPI()
-
+    
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -38,13 +38,10 @@ def create_app() -> FastAPI:
     )
 
     configure_routes(app)
-
     return app
 
-# Run database setup
 execute_sql_files()
 
-# Create app instance
 app = create_app()
 
 # tart the background worker in a thread when app starts

@@ -21,5 +21,3 @@ class Tables:
     @memoized_property
     def chat_messages(self):
         return Table("chat_messages", self.metadata, autoload_with=engine)
-
-    

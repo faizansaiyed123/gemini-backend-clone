@@ -8,14 +8,18 @@ from src.configs.settings import settings
 from src.logs.logger import log_message
 from src.services.tables import Tables
 from sqlalchemy import update ,select
+
+
 app_response = AppResponse()
 tables = Tables()
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+
+
 def subscribe_pro_service(user_id: str, db: Session, request: Request):
     api_name = "subscribe_pro"
     try:
-        YOUR_DOMAIN = settings.FRONTEND_URL or "https://gemini-backend-q94y.onrender.com/payment/success"
+        FRONTEND_BASE_URL = settings.FRONTEND_URL or "https://gemini-backend-q94y.onrender.com/payment/success"
         
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
@@ -26,8 +30,8 @@ def subscribe_pro_service(user_id: str, db: Session, request: Request):
             }],
             client_reference_id=user_id,
             metadata={"user_id": user_id},
-            success_url=f"{YOUR_DOMAIN}/payment/success",
-            cancel_url=f"{YOUR_DOMAIN}/payment/cancel",
+            success_url=f"{FRONTEND_BASE_URL}/payment/success",
+            cancel_url=f"{FRONTEND_BASE_URL}/payment/cancel",
         )
 
         log_message("success", "Stripe checkout session created", data={"session_id": checkout_session.id}, api_name=api_name)
@@ -49,12 +53,6 @@ def subscribe_pro_service(user_id: str, db: Session, request: Request):
             False
         )
         return app_response
-
-
-
-
-
-
 
 
 def subscription_status_service(user_id: str, db: Session):
@@ -90,4 +88,3 @@ def subscription_status_service(user_id: str, db: Session):
             Messages.FALSE
         )
         return app_response
-

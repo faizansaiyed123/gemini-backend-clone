@@ -9,8 +9,11 @@ from src.common.messages import Messages
 from sqlalchemy.orm import Session
 from src.configs.redis_config import redis_client
 import json
+
+
 tables = Tables()
 app_response = AppResponse()
+
 
 def create_chatroom_service(user_id: str, payload, db):
     api_name = "create_chatroom"
@@ -108,7 +111,6 @@ def get_chatroom_details_service(chatroom_id: str, user_id: str, db: Session):
     try:
         log_message("info", "API called: get_chatroom_details_service", data={"chatroom_id": chatroom_id}, api_name=api_name)
 
-        # Fetch the chatroom owned by user
         result = db.execute(
             select(tables.chatrooms).where(
                 (tables.chatrooms.c.id == chatroom_id) &

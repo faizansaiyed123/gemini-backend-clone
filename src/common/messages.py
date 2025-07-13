@@ -1,5 +1,4 @@
 class Messages:
-    # General
     FAILED = "failed"
     FALSE = False
     SUCCESS = "Success"
@@ -9,13 +8,10 @@ class Messages:
     INCORRECT_OLD_PASSWORD = "Old password is incorrect"
     PASSWORD_CHANGED_SUCCESSFULLY = "Password changed successfully"
     PASSWORD_RESET_SUCCESSFULLY = "Password reset successfully"
-    # User
     USER_ALREADY_EXISTS = "User already exists"
     USER_CREATED_SUCCESSFULLY = "User created successfully"
     FOUND_USER_DETAILS = "Found user details"
     NOT_FOUND_USER_DETAILS = "User details not found"
-
-    # Auth
     MOBILE_REQUIRED = "Mobile number is required"
     MOBILE_ALREADY_EXISTS = "Mobile number is already registered"
     SIGNUP_SUCCESS = "User registered successfully"
@@ -26,18 +22,12 @@ class Messages:
     INCORRECT_PASSWORD = "Incorrect password"
     UNAUTHORIZED = "Unauthorized access"
     TOKEN_INVALID_OR_EXPIRED = "Token is invalid or has expired"
-
-    # Email (optional)
     EMAIL_SENT_SUCCESSFULLY = "Email sent successfully"
     EMAIL_NOT_FOUND = "Email not found"
-
-    # Stripe/Subscription
     SUBSCRIPTION_STARTED = "Subscription started successfully"
     SUBSCRIPTION_FAILED = "Subscription failed"
     SUBSCRIPTION_STATUS_FETCHED = "Subscription status retrieved"
     CHECKOUT_SESSION_CREATED = "Checkout Session created"
-
-    # Chatroom
     CHATROOM_CREATED = "Chatroom created successfully"
     CHATROOM_NOT_FOUND = "Chatroom not found"
     MESSAGE_SENT = "Message sent to Gemini"
@@ -45,6 +35,4 @@ class Messages:
     INTERNAL_SERVER_ERROR = "Internal Server Error"
     CHATROOMS_FETCHED_SUCCESSFULLY = "Chatrooms Fetched successfully"
     CHATROOM_DETAILS_FETCHED = "Chatroom data Fetched successfully"
-
-    #OpenAi
     MESSAGE_SENT_SUCCESSFULLY = "Message sent successfully"

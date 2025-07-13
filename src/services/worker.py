@@ -4,18 +4,17 @@ from datetime import datetime
 from sqlalchemy import create_engine, insert
 from sqlalchemy.orm import sessionmaker
 from openai import OpenAI
-
 from src.queue.queue import pop_from_queue
 from src.services.tables import Tables
 from src.configs.settings import settings
 from src.logs.logger import log_message
 
-# --- Setup ---
 
 engine = create_engine(settings.DATABASE_URL)
 Session = sessionmaker(bind=engine)
 tables = Tables()
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
 
 def call_openai_response(content):
     """Call OpenAI API and return response"""
@@ -33,7 +32,6 @@ def call_openai_response(content):
         log_message("error", f"OpenAI API error: {str(e)}", api_name="worker")
         return "Sorry, I encountered an error while processing your request."
 
-# --- Worker Loop ---
 
 def worker_loop():
     log_message("info", "Worker loop started", api_name="worker")
@@ -45,15 +43,12 @@ def worker_loop():
             continue
 
         try:
-            # Debug: Log the message structure
             log_message("debug", f"Processing message: {message}", api_name="worker")
             
-            # Check if message is a dict and has required keys
             if not isinstance(message, dict):
                 log_message("error", f"Message is not a dict: {type(message)}", api_name="worker")
                 continue
                 
-            # Check for required fields
             required_fields = ["chatroom_id", "user_id", "content"]
             missing_fields = [field for field in required_fields if field not in message]
             
@@ -101,12 +96,3 @@ def worker_loop():
             log_message("error", f"KeyError - missing key: {str(e)}", api_name="worker")
         except Exception as e:
             log_message("error", f"Worker error: {str(e)}", api_name="worker")
-
-# --- Entry Point ---
-
-if __name__ == "__main__":
-    worker_loop()
-
-
-
-  

@@ -22,7 +22,7 @@ tables = Tables()
 def subscribe_pro(
     request: Request,
     db: Session = Depends(get_db),
-    user_id: str = Depends(get_current_user)  # ✅ use your custom dependency
+    user_id: str = Depends(get_current_user)
 ):
     return subscribe_pro_service(user_id, db, request)
 

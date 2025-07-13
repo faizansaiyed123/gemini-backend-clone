@@ -1,9 +1,8 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select ,update
 from datetime import datetime
 import uuid
 from src.services.tables import Tables
-from sqlalchemy import update
 from src.common.app_response import AppResponse
 from src.common.app_constants import AppConstants
 from src.common.messages import Messages
@@ -14,6 +13,8 @@ from datetime import datetime, timedelta
 from src.logs.logger import log_message
 from src.configs.settings import settings
 from src.schemas.auth import ChangePasswordRequest ,ResetPasswordRequest
+
+
 app_response = AppResponse()
 tables = Tables()
 
@@ -146,6 +147,7 @@ def send_otp_service(user, db: Session):
         )
         return app_response
 
+
 def verify_otp_service(payload, db: Session):
     api_name = "verify_otp"
 
@@ -175,7 +177,6 @@ def verify_otp_service(payload, db: Session):
             return app_response
 
         if user["otp_code"] != payload.otp:
-            # Increment otp_attempts
             db.execute(
                 update(tables.users)
                 .where(tables.users.c.mobile == payload.mobile)
@@ -192,7 +193,6 @@ def verify_otp_service(payload, db: Session):
             )
             return app_response
 
-        # Check if OTP is expired
         if not user["otp_created_at"] or (datetime.utcnow() - user["otp_created_at"]) > timedelta(minutes=settings.OTP_EXPIRY_MINUTES):
             log_message("warning", "OTP expired", data={"mobile": payload.mobile}, api_name=api_name)
             app_response.set_response(
@@ -203,7 +203,6 @@ def verify_otp_service(payload, db: Session):
             )
             return app_response
 
-        # OTP is valid → update user status
         db.execute(
             update(tables.users)
             .where(tables.users.c.mobile == payload.mobile)
@@ -212,7 +211,7 @@ def verify_otp_service(payload, db: Session):
                 otp_code=None,
                 otp_created_at=None,
                 otp_last_sent_at=None,
-                otp_attempts=0  # Reset attempts
+                otp_attempts=0
             )
         )
         db.commit()
@@ -237,7 +236,6 @@ def verify_otp_service(payload, db: Session):
 def forgot_password_service(user, db: Session):
     api_name = "forgot_password"
     
-
     try:
         log_message("info", "API called: forgot_password_service", data={"mobile": user.mobile}, api_name=api_name)
 
@@ -289,7 +287,6 @@ def forgot_password_service(user, db: Session):
 def change_password_service(user_id: str, request: ChangePasswordRequest, db: Session):
     api_name = "change_password"
     
-
     try:
         log_message("info", "API called: change_password_service", data={"user_id": user_id}, api_name=api_name)
 
@@ -350,7 +347,6 @@ def change_password_service(user_id: str, request: ChangePasswordRequest, db: Se
 def reset_password_service(user_id: str, request: ResetPasswordRequest, db: Session):
     api_name = "reset_password"
     
-
     try:
         log_message("info", "API called: reset_password_service", data={"user_id": user_id}, api_name=api_name)
 

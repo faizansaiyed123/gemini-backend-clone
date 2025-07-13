@@ -11,6 +11,7 @@ from src.logs.logger import log_message
 from src.schemas.message import SendMessageRequest
 from src.queue.queue import push_to_queue
 
+
 tables = Tables()
 app_response = AppResponse()
 

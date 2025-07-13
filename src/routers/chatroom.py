@@ -6,6 +6,7 @@ from src.configs.config import get_db
 from src.utils.token import get_current_user
 from src.schemas.chatroom import ChatroomCreateRequest
 
+app_response = AppResponse()
 router = APIRouter()
 
 @router.post("/chatroom")

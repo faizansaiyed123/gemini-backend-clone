@@ -41,11 +41,9 @@ def extract_version(filename):
 
 
 def execute_sql_files():
-    # Connect to the database
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
 
-    # Ensure the migrations table exists
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS migrations (
         id SERIAL PRIMARY KEY,

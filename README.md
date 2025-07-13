@@ -126,3 +126,54 @@ SERVER_TIMEOUT=200
 
 5. Start the FastAPI Server
 uvicorn main:app --reload
+
+
+
+---
+
+🧪 API Testing with Postman
+You can test all API endpoints using the Postman files provided in the /postman folder.
+
+✅ Steps to Test
+Step 1: Import the Environment File
+
+File: postman_environment.json
+
+This file sets the required variables (base_url, token) automatically.
+
+After import:
+
+Go to the Environments tab in Postman.
+
+Activate the environment named chatroom by clicking the ✅ checkmark.
+
+Step 2: Import the Collection File
+
+File: kuvaka tech chatroom.postman_collection.json
+
+This contains all API endpoints organized by folders (auth, chatroom, subscription, etc.).
+
+
+Step 3: Start Testing the API
+Start by signing up a new user:
+
+POST /auth/signup
+➤ This will return a JWT token.
+✅ The token will be automatically saved in the environment.
+
+
+🔐 Login Flow (OTP-Based)
+POST /auth/send-otp
+➤ Provide a mobile number; the OTP will be returned in the response (mocked).
+
+POST /auth/verify-otp
+➤ Use the OTP from the previous step to verify the login.
+✅ A new JWT token will be returned and saved automatically.
+
+
+Once the token is set in the environment, you can test protected endpoints like:
+
+Creating chatrooms
+Sending messages  
+Viewing chat history
+Managing subscriptions

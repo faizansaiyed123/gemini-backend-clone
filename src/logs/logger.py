@@ -13,15 +13,15 @@ LOG_DIR = "logs"
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
-# Define Log File (Rotates Daily)
+
 ERROR_LOG_FILE = os.path.join(LOG_DIR, f"error_logs_{datetime.now().strftime('%Y-%m-%d')}.csv")
 
-# Configure Loguru
-logger.remove()  # Remove default logger
-logger.add(sys.stdout, format="{time} | {level} | {message}", level="INFO")  # Console log
-logger.add(ERROR_LOG_FILE, format="{time} | {level} | {message}", level="ERROR", rotation="1 day")  # File log
 
-#  Ensure CSV Headers Exist
+logger.remove()
+logger.add(sys.stdout, format="{time} | {level} | {message}", level="INFO")
+logger.add(ERROR_LOG_FILE, format="{time} | {level} | {message}", level="ERROR", rotation="1 day") 
+
+
 if not os.path.exists(ERROR_LOG_FILE) or os.path.getsize(ERROR_LOG_FILE) == 0:
     with open(ERROR_LOG_FILE, "w", newline="") as file:
         writer = csv.DictWriter(file, fieldnames=["timestamp", "api_name", "level", "message", "data", "exception"])
@@ -37,13 +37,13 @@ def log_message(level: str, message: str = None, data=None, exception: Exception
     :param exception: Optional exception to log.
     :param api_name: API name to log (passed dynamically).
     """
-    # If message is not provided, use a default one
+
     if not message:
         message = "No message provided"
 
     # If API name isn't provided, fallback to function name of the caller
     if not api_name:
-        api_name = inspect.stack()[1].function  # Get the function name of the caller
+        api_name = inspect.stack()[1].function
     
 
     exception_details = None
@@ -51,7 +51,6 @@ def log_message(level: str, message: str = None, data=None, exception: Exception
         exception_details = str(exception) if isinstance(exception, Exception) else str(exception)
         exception_details = exception_details.split("\n")[0]
 
-    # Log to terminal
     if level == "info":
         logger.info(f"API: {api_name} | {message} | Data: {data}")
     elif level == "warning":
@@ -84,7 +83,6 @@ def capture_api_name(func):
     async def wrapper(*args, **kwargs):
         api_name = kwargs.get('api_name', func.__name__)  # If API name exists in kwargs, use it
         
-        # Ensure message is not None or empty
         message = f"API called: {api_name}" if api_name else "API called: Unknown"
         
         # Log the API call with the message 'API called: {api_name}'
