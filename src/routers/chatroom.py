@@ -25,8 +25,9 @@ def create_chatroom(
 
 @router.get("/chatroom")
 async def list_chatrooms(current_user_id: str = Depends(get_current_user), db: Session = Depends(get_db)):
-    app_response = list_chatrooms_service(current_user_id, db)
+    app_response = await list_chatrooms_service(current_user_id, db)
     return app_response
+
 
 
 

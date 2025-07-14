@@ -1,10 +1,10 @@
 {
 	"info": {
-		"_postman_id": "76c4ea9b-5bc1-41b5-ac7c-b7cb19d040cf",
+		"_postman_id": "4b167917-8403-489a-8f35-957192ce093c",
 		"name": "kuvaka tech chatroom",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "40438067",
-		"_collection_link": "https://testing-3624.postman.co/workspace/a010194c-5e99-4e86-808a-d8c8d1ffc60c/collection/40438067-76c4ea9b-5bc1-41b5-ac7c-b7cb19d040cf?action=share&source=collection_link&creator=40438067"
+		"_collection_link": "https://testing-3624.postman.co/workspace/testing-Workspace~a010194c-5e99-4e86-808a-d8c8d1ffc60c/collection/40438067-4b167917-8403-489a-8f35-957192ce093c?action=share&source=collection_link&creator=40438067"
 	},
 	"item": [
 		{
@@ -43,7 +43,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"mobile\": \"1478956547\",\n  \"full_name\": \"test\",\n  \"password\": \"Test@123\"\n}",
+							"raw": "{\n  \"mobile\": \"1234567895\",\n  \"full_name\": \"test\",\n  \"password\": \"Test@123\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -139,7 +139,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"mobile\": \"1478956547\",\n  \"otp\": \"326256\"\n}",
+							"raw": "{\n  \"mobile\": \"1234567895\",\n  \"otp\": \"324745\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -178,7 +178,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"mobile\": \"2222222222\"\n}",
+							"raw": "{\n  \"mobile\": \"1234567895\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -248,16 +248,6 @@
 				{
 					"name": "Reset-Password",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMTkxNTdlZS0xZTg0LTQyMDUtYmM3Yi0yNWE1MjZjY2E1NDciLCJleHAiOjE3NTIzOTg3Mzh9.ZPMR7jP2DEiCpmyyBhfPJq8WyBVmU9UNXOurQq1kaK8",
-									"type": "string"
-								}
-							]
-						},
 						"method": "POST",
 						"header": [
 							{
@@ -276,7 +266,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"new_password\": \"Faiz@123\"\n}",
+							"raw": "{\n  \"new_password\": \"test@123\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"

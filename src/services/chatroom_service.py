@@ -8,6 +8,7 @@ from src.common.app_constants import AppConstants
 from src.common.messages import Messages
 from sqlalchemy.orm import Session
 from src.configs.redis_config import redis_client
+
 import json
 
 
@@ -57,14 +58,14 @@ def create_chatroom_service(user_id: str, payload, db):
 
 
 
-def list_chatrooms_service(user_id: str, db: Session):
+async def list_chatrooms_service(user_id: str, db: Session):
     api_name = "list_chatrooms"
 
     try:
         log_message("info", "API called: list_chatrooms_service", data={"user_id": user_id}, api_name=api_name)
 
         cache_key = f"chatrooms:{user_id}"
-        cached = redis_client.get(cache_key)
+        cached = await redis_client.get(cache_key)
 
         if cached:
             chatrooms = json.loads(cached)
@@ -83,7 +84,8 @@ def list_chatrooms_service(user_id: str, db: Session):
                 for row in result
             ]
 
-            redis_client.setex(cache_key, 600, json.dumps(chatrooms))  # TTL 10 minutes
+            # ✅ Cache the result for 600 seconds (10 minutes)
+            await redis_client.set(cache_key, json.dumps(chatrooms), ex=600)
             log_message("info", "Chatrooms fetched from DB and cached", api_name=api_name)
 
         app_response.set_response(
