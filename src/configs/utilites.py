@@ -32,7 +32,6 @@ def table_exists(cursor, table_name):
     return cursor.fetchone()[0]
 
 def extract_version(filename):
-    # Use regex to find the numeric part of the filename
     match = re.search(r'V(\d+)', filename)
     return int(match.group(1)) if match else float('inf')  # Return a large number if no match
 
@@ -53,15 +52,12 @@ def execute_sql_files():
     """)
     conn.commit()
 
-    # Get the list of already executed files
     cursor.execute("SELECT file_name FROM migrations;")
     executed_files = {row[0] for row in cursor.fetchall()}
 
-    # Get absolute path for the database directory
     BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    DATABASE_DIR = os.path.join(BASE_DIR, "database")  # Correct path
+    DATABASE_DIR = os.path.join(BASE_DIR, "database")
 
-    # Ensure the directory exists
     if not os.path.exists(DATABASE_DIR):
         raise FileNotFoundError(f"Database directory not found: {DATABASE_DIR}")
 
@@ -69,9 +65,8 @@ def execute_sql_files():
     
     for file_name in sql_files:
         if file_name not in executed_files:
-            file_path = os.path.join(DATABASE_DIR, file_name)  # Correct path
+            file_path = os.path.join(DATABASE_DIR, file_name)
 
-            # Ensure the file exists
             if not os.path.isfile(file_path):
                 raise FileNotFoundError(f"SQL file not found: {file_path}")
 
@@ -84,12 +79,10 @@ def execute_sql_files():
                     table_name = first_line.split(" ")[2]
                     table_name = table_name.replace("if not exists", "").strip("();")
 
-                    # Check if the table already exists
                     if table_exists(cursor, table_name):
                         print(f"Skipping {file_name}: Table {table_name} already exists.")
                         continue
 
-                # Execute the SQL script
                 print(f"Executing: {file_name}")
                 cursor.execute(sql)
                 cursor.execute("INSERT INTO migrations (file_name) VALUES (%s);", (file_name,))
