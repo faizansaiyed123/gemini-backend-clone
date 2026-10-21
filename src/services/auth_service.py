@@ -100,7 +100,6 @@ def send_otp_service(user, db: Session):
         user_data = result._mapping
         now = datetime.utcnow()
 
-        #  Check cooldown
         last_sent = user_data.get("otp_last_sent_at")
         if last_sent and (now - last_sent).total_seconds() < settings.OTP_RESEND_INTERVAL_SECONDS:
             wait_time = int(settings.OTP_RESEND_INTERVAL_SECONDS - (now - last_sent).total_seconds())
@@ -165,7 +164,6 @@ def verify_otp_service(payload, db: Session):
 
         user = result._mapping
 
-        # Check max attempt limit
         if user["otp_attempts"] is not None and user["otp_attempts"] >= settings.MAX_OTP_ATTEMPTS:
             log_message("warning", "OTP attempt limit exceeded", data={"mobile": payload.mobile}, api_name=api_name)
             app_response.set_response(
