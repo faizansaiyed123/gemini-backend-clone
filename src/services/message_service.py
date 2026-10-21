@@ -72,7 +72,6 @@ def send_message_service(user_id: str, chatroom_id: str, payload: SendMessageReq
         )
         db.commit()
 
-        #Push message to async processing queue
         push_to_queue({
             "chatroom_id": chatroom_id,
             "user_id": user_id,

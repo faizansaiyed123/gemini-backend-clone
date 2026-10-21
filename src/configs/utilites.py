@@ -33,7 +33,7 @@ def table_exists(cursor, table_name):
 
 def extract_version(filename):
     match = re.search(r'V(\d+)', filename)
-    return int(match.group(1)) if match else float('inf')  # Return a large number if no match
+    return int(match.group(1)) if match else float('inf')
 
 
 
@@ -73,7 +73,6 @@ def execute_sql_files():
             with open(file_path, "r") as file:
                 sql = file.read()
 
-                # Extract table name (assuming one table per file)
                 first_line = sql.strip().split("\n")[0].strip().lower()
                 if first_line.startswith("create table"):
                     table_name = first_line.split(" ")[2]

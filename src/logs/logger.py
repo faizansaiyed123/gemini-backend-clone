@@ -27,7 +27,6 @@ if not os.path.exists(ERROR_LOG_FILE) or os.path.getsize(ERROR_LOG_FILE) == 0:
         writer = csv.DictWriter(file, fieldnames=["timestamp", "api_name", "level", "message", "data", "exception"])
         writer.writeheader()
 
-#  Helper Function to Log with Auto API Name, Data, & Exception Details
 def log_message(level: str, message: str = None, data=None, exception: Exception = None, api_name: str = None):
     """
     Logs a message to both the terminal (Loguru) and a CSV file.
@@ -41,7 +40,6 @@ def log_message(level: str, message: str = None, data=None, exception: Exception
     if not message:
         message = "No message provided"
 
-    # If API name isn't provided, fallback to function name of the caller
     if not api_name:
         api_name = inspect.stack()[1].function
     
@@ -77,18 +75,15 @@ def log_message(level: str, message: str = None, data=None, exception: Exception
 
 
 
-# Decorator to capture API function name dynamically and log only the API name
 def capture_api_name(func):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
-        api_name = kwargs.get('api_name', func.__name__)  # If API name exists in kwargs, use it
+        api_name = kwargs.get('api_name', func.__name__)
         
         message = f"API called: {api_name}" if api_name else "API called: Unknown"
         
-        # Log the API call with the message 'API called: {api_name}'
         log_message("info", message, data={"user_id": kwargs.get('user_id')}, api_name=api_name)
         
-        # Call the original function
         return await func(*args, **kwargs)
 
     return wrapper

@@ -121,7 +121,7 @@ def send_otp_service(user, db: Session):
                 otp_code=otp,
                 otp_created_at=now,
                 otp_last_sent_at=now,
-                otp_attempts=0  # Reset attempts on resend
+                otp_attempts=0
             )
         )
         db.commit()

@@ -84,7 +84,6 @@ async def list_chatrooms_service(user_id: str, db: Session):
                 for row in result
             ]
 
-            # ✅ Cache the result for 600 seconds (10 minutes)
             await redis_client.set(cache_key, json.dumps(chatrooms), ex=600)
             log_message("info", "Chatrooms fetched from DB and cached", api_name=api_name)
 
@@ -130,7 +129,6 @@ def get_chatroom_details_service(chatroom_id: str, user_id: str, db: Session):
             )
             return app_response
 
-        # Fetch all messages from the chatroom
         messages = db.execute(
             select(tables.chat_messages)
             .where(tables.chat_messages.c.chatroom_id == chatroom_id)

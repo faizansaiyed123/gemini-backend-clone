@@ -44,7 +44,6 @@ execute_sql_files()
 
 app = create_app()
 
-# tart the background worker in a thread when app starts
 @app.on_event("startup")
 async def startup_event():
     def start_worker():
