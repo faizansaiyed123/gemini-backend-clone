@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.orm import Session
 from src.configs.config import get_db
 from src.utils.token import get_current_user
@@ -35,26 +35,14 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     sig_header = request.headers.get("stripe-signature")
 
     if not sig_header:
-        app_response.set_response(
-            AppConstants.CODE_UNAUTHORIZED,
-            {},
-            "Missing Stripe signature",
-            Messages.FALSE
-        )
-        return app_response
+        raise HTTPException(status_code=400, detail="Missing Stripe signature")
 
     try:
         event = stripe.Webhook.construct_event(
             payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
         )
     except stripe.error.SignatureVerificationError:
-        app_response.set_response(
-            AppConstants.CODE_UNAUTHORIZED,
-            {},
-            "Invalid Stripe signature",
-            Messages.FALSE
-        )
-        return app_response
+        raise HTTPException(status_code=400, detail="Invalid Stripe signature")
 
     if event["type"] == "checkout.session.completed":
         session_data = event["data"]["object"]
