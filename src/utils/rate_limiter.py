@@ -1,5 +1,5 @@
 from datetime import datetime
-from src.configs.redis_config import redis_client
+from src.configs.redis_config import redis_sync_client as redis_client
 
 RATE_LIMIT = 5 
 
