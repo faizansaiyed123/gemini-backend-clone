@@ -42,6 +42,15 @@ def create_app() -> FastAPI:
 
 execute_sql_files()
 
+# Reflect all database tables after migrations finish and before concurrent
+# requests can first access the lazy table properties. This avoids caching a
+# partially initialized SQLAlchemy Table when room-detail and message requests
+# arrive together after a new conversation is created.
+from src.services.tables import Tables
+
+tables = Tables()
+_ = (tables.users, tables.chatrooms, tables.chat_messages)
+
 app = create_app()
 
 @app.on_event("startup")
