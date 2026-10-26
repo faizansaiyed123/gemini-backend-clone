@@ -7,7 +7,7 @@ from src.common.app_response import AppResponse
 from src.common.app_constants import AppConstants
 from src.common.messages import Messages
 from sqlalchemy.orm import Session
-from src.configs.redis_config import redis_client
+from src.configs.redis_config import redis_client, redis_sync_client
 
 import json
 
@@ -32,6 +32,13 @@ def create_chatroom_service(user_id: str, payload, db):
             )
         )
         db.commit()
+
+        # The recent-room list is cached per user. Clear it after a successful
+        # insert so the next list request reads the new room from PostgreSQL.
+        try:
+            redis_sync_client.delete(f"chatrooms:{user_id}")
+        except Exception as cache_error:
+            log_message("warning", f"Chatroom cache invalidation failed: {str(cache_error)}", data={"user_id": user_id}, api_name=api_name)
 
         log_message("success", "Chatroom created", data={"chatroom_id": chatroom_id}, api_name=api_name)
 
