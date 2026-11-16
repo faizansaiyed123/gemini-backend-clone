@@ -5,7 +5,7 @@ This branch contains an isolated recruiter demo API. It preserves the existing f
 ## Run locally
 
     python -m pip install -r requirements.txt
-    uvicorn app.demo_api:app --host 0.0.0.0 --port 8000
+    uvicorn demo_api:app --host 0.0.0.0 --port 8000
 
 Health check: GET /health
 
@@ -30,7 +30,7 @@ Assistant responses are deterministic templates. They do not call Gemini, OpenAI
 
 ## Isolation and safety
 
-app/demo_api.py is a separate entry point and does not import app.py, production settings, database helpers, SQLAlchemy tables, Redis queue code, worker code, OpenAI, or Stripe. State is synthetic and process-local; restarting the process resets it. The simulated Pro endpoint does not collect payment or contact Stripe.
+demo_api.py is a separate entry point and does not import app.py, production settings, database helpers, SQLAlchemy tables, Redis queue code, worker code, OpenAI, or Stripe. State is synthetic and process-local; restarting the process resets it. The simulated Pro endpoint does not collect payment or contact Stripe.
 
 Run the demo tests with:
 
