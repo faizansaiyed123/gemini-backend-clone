@@ -3,7 +3,7 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
-from app.demo_api import DEMO_MOBILE, DEMO_OTP, app, reset_demo_state
+from demo_api import DEMO_MOBILE, DEMO_OTP, app, reset_demo_state
 
 client = TestClient(app)
 
