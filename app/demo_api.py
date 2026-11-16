@@ -1,0 +1,421 @@
+"""Standalone Gemini-clone demo API.
+
+This module deliberately does not import the production app, database setup,
+Redis queue, OpenAI client, or Stripe integration. All demo state is synthetic
+and kept in memory for the lifetime of this process.
+"""
+from __future__ import annotations
+
+import time
+import uuid
+from datetime import datetime, timezone
+from typing import Any
+
+from fastapi import Body, FastAPI, Header, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+DEMO_MOBILE = "9876543210"
+DEMO_OTP = "246810"
+BASIC_DAILY_LIMIT = 5
+REPLY_DELAY_SECONDS = 0.35
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _id(prefix: str) -> str:
+    return f"{prefix}-{uuid.uuid4().hex[:12]}"
+
+
+def _envelope(data: Any, message: str = "Success", code: int = 200) -> dict[str, Any]:
+    return {"code": code, "data": data, "message": message, "status": True}
+
+
+def _seed_state() -> dict[str, Any]:
+    created = _now()
+    user_id = "demo-user-1"
+    room_id = "demo-chat-1"
+    return {
+        "users": {
+            user_id: {
+                "user_id": user_id,
+                "mobile": DEMO_MOBILE,
+                "full_name": "Avery Morgan",
+                "is_verified": True,
+                "created_at": created,
+                "password": "DemoPass123!",
+                "subscription_tier": "basic",
+                "otp": None,
+                "otp_sent_at": 0.0,
+                "otp_attempts": 0,
+                "message_day": datetime.now(timezone.utc).date().isoformat(),
+                "message_count": 0,
+            }
+        },
+        "mobile_index": {DEMO_MOBILE: user_id},
+        "tokens": {f"demo-access:{user_id}": user_id},
+        "rooms": {
+            room_id: {
+                "chatroom_id": room_id,
+                "user_id": user_id,
+                "name": "A quick tour of your workspace",
+                "created_at": created,
+            }
+        },
+        "messages": {
+            room_id: [
+                {
+                    "message_id": "demo-message-user-1",
+                    "content": "What can I use this workspace for?",
+                    "sender": "user",
+                    "created_at": created,
+                },
+                {
+                    "message_id": "demo-message-ai-1",
+                    "content": (
+                        "You can use this space to explore ideas, ask questions, "
+                        "draft plans, and keep conversations organized. Start a "
+                        "new chat whenever you want to explore a different topic."
+                    ),
+                    "sender": "ai",
+                    "created_at": created,
+                },
+            ]
+        },
+        "pending": [],
+    }
+
+
+STATE = _seed_state()
+
+
+def reset_demo_state() -> None:
+    """Reset synthetic records; useful for tests and local demo restarts."""
+    global STATE
+    STATE = _seed_state()
+
+
+def _user_from_token(authorization: str | None) -> dict[str, Any]:
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=401, detail="Authentication required")
+    token = authorization.split(" ", 1)[1].strip()
+    user_id = STATE["tokens"].get(token)
+    user = STATE["users"].get(user_id) if user_id else None
+    if not user:
+        raise HTTPException(status_code=401, detail="Demo session is invalid")
+    return user
+
+
+def _require_room(room_id: str, user: dict[str, Any]) -> dict[str, Any]:
+    room = STATE["rooms"].get(room_id)
+    if not room or room["user_id"] != user["user_id"]:
+        raise HTTPException(status_code=404, detail="Chatroom not found")
+    return room
+
+
+def _assistant_reply(content: str) -> str:
+    prompt = content.strip()
+    lower = prompt.lower()
+    if any(word in lower for word in ("python", "javascript", "typescript", "code", "program")):
+        return (
+            "A practical way to approach this is to make the smallest working "
+            "version first, then improve it in clear steps.\n\n"
+            "1. Define the expected input and output.\n"
+            "2. Split the work into small, testable functions.\n"
+            "3. Handle invalid input and failure cases explicitly.\n"
+            "4. Add a focused test before expanding the implementation.\n\n"
+            "This is a deterministic demo response rather than a live model call."
+        )
+    if any(word in lower for word in ("plan", "project", "roadmap", "learn")):
+        return (
+            "Here is a useful starting plan:\n\n"
+            "1. Write down the outcome you want to achieve.\n"
+            "2. Break it into milestones that can be verified.\n"
+            "3. Complete one small milestone at a time.\n"
+            "4. Review progress and adjust the next step using what you learned.\n\n"
+            "This reply is generated by the local demo simulator."
+        )
+    if any(word in lower for word in ("explain", "what is", "how does", "why")):
+        return (
+            "The key idea is to understand the problem in layers: first identify "
+            "the concept, then see how its parts interact, and finally apply it "
+            "to a small example. Ask a follow-up question to explore any part "
+            "in more detail.\n\n"
+            "This is a deterministic demo response, not a live Gemini or OpenAI call."
+        )
+    return (
+        f"I understand you want to explore: “{prompt[:180]}”. "
+        "A good next step is to clarify the outcome, identify the constraints, "
+        "and work through one concrete example. You can continue the conversation "
+        "with a more specific question.\n\n"
+        "Demo note: responses are generated locally and do not call an AI provider."
+    )
+
+
+def _materialize_due_replies() -> None:
+    now = time.monotonic()
+    remaining = []
+    for item in STATE["pending"]:
+        if item["due_at"] > now:
+            remaining.append(item)
+            continue
+        STATE["messages"].setdefault(item["room_id"], []).append(
+            {
+                "message_id": _id("message"),
+                "content": _assistant_reply(item["content"]),
+                "sender": "ai",
+                "created_at": _now(),
+            }
+        )
+    STATE["pending"] = remaining
+
+
+app = FastAPI(
+    title="Gemini Clone Demo API",
+    description="Isolated in-memory API simulator for recruiter demonstrations.",
+    version="1.0.0-demo",
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "ok", "mode": "demo", "storage": "in-memory"}
+
+
+@app.post("/auth/signup")
+def signup(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    mobile = str(payload.get("mobile", "")).strip()
+    password = str(payload.get("password", ""))
+    full_name = str(payload.get("full_name") or "Gemini demo user").strip()
+    if not mobile.isdigit() or not 10 <= len(mobile) <= 15 or len(password) < 8:
+        raise HTTPException(status_code=400, detail="Enter a valid mobile number and password")
+    if mobile in STATE["mobile_index"]:
+        raise HTTPException(status_code=409, detail="Mobile number already exists")
+    user_id = _id("user")
+    user = {
+        "user_id": user_id,
+        "mobile": mobile,
+        "full_name": full_name[:100],
+        "is_verified": True,
+        "created_at": _now(),
+        "password": password,
+        "subscription_tier": "basic",
+        "otp": None,
+        "otp_sent_at": 0.0,
+        "otp_attempts": 0,
+        "message_day": datetime.now(timezone.utc).date().isoformat(),
+        "message_count": 0,
+    }
+    STATE["users"][user_id] = user
+    STATE["mobile_index"][mobile] = user_id
+    token = f"demo-access:{user_id}"
+    STATE["tokens"][token] = user_id
+    return _envelope({"user_id": user_id, "token": token}, "Demo account created")
+
+
+@app.post("/auth/send-otp")
+def send_otp(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    mobile = str(payload.get("mobile", "")).strip()
+    user_id = STATE["mobile_index"].get(mobile)
+    if not user_id:
+        raise HTTPException(status_code=404, detail="User not found. Create a demo account first.")
+    user = STATE["users"][user_id]
+    user["otp"] = DEMO_OTP
+    user["otp_sent_at"] = time.monotonic()
+    user["otp_attempts"] = 0
+    return _envelope({"otp": DEMO_OTP}, "Demo OTP created")
+
+
+@app.post("/auth/verify-otp")
+def verify_otp(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    mobile = str(payload.get("mobile", "")).strip()
+    otp = str(payload.get("otp", "")).strip()
+    user_id = STATE["mobile_index"].get(mobile)
+    if not user_id:
+        raise HTTPException(status_code=404, detail="User not found")
+    user = STATE["users"][user_id]
+    if user.get("otp") != otp or not user.get("otp"):
+        user["otp_attempts"] = user.get("otp_attempts", 0) + 1
+        raise HTTPException(status_code=400, detail="Incorrect or expired OTP")
+    if time.monotonic() - user.get("otp_sent_at", 0) > 300:
+        user["otp"] = None
+        raise HTTPException(status_code=400, detail="Incorrect or expired OTP")
+    user["is_verified"] = True
+    user["otp"] = None
+    token = f"demo-access:{user_id}"
+    STATE["tokens"][token] = user_id
+    return _envelope({"access_token": token}, "Demo sign-in successful")
+
+
+@app.post("/auth/forgot-password")
+def forgot_password(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    return send_otp(payload)
+
+
+@app.post("/auth/reset-password")
+def reset_password(
+    payload: dict[str, Any] = Body(...),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    user = _user_from_token(authorization)
+    new_password = str(payload.get("new_password", ""))
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must contain at least 8 characters")
+    user["password"] = new_password
+    return _envelope({}, "Demo password reset")
+
+
+@app.post("/auth/change-password")
+def change_password(
+    payload: dict[str, Any] = Body(...),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    user = _user_from_token(authorization)
+    if payload.get("old_password") != user["password"]:
+        raise HTTPException(status_code=401, detail="Current password is incorrect")
+    new_password = str(payload.get("new_password", ""))
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must contain at least 8 characters")
+    user["password"] = new_password
+    return _envelope({}, "Demo password changed")
+
+
+@app.get("/user/user/me")
+def get_me(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    user = _user_from_token(authorization)
+    return _envelope(
+        {
+            "user_id": user["user_id"],
+            "mobile": user["mobile"],
+            "full_name": user["full_name"],
+            "is_verified": user["is_verified"],
+            "created_at": user["created_at"],
+        },
+        "User details fetched",
+    )
+
+
+@app.get("/ChatRoom/chatroom")
+def list_chatrooms(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    user = _user_from_token(authorization)
+    rooms = [
+        {
+            "chatroom_id": room["chatroom_id"],
+            "name": room["name"],
+            "created_at": room["created_at"],
+        }
+        for room in STATE["rooms"].values()
+        if room["user_id"] == user["user_id"]
+    ]
+    rooms.sort(key=lambda room: room["created_at"], reverse=True)
+    return _envelope(rooms, "Chatrooms fetched")
+
+
+@app.post("/ChatRoom/chatroom")
+def create_chatroom(
+    payload: dict[str, Any] = Body(...),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    user = _user_from_token(authorization)
+    title = str(payload.get("title", "")).strip()[:100]
+    if not title:
+        raise HTTPException(status_code=400, detail="Chatroom title is required")
+    room_id = _id("chatroom")
+    STATE["rooms"][room_id] = {
+        "chatroom_id": room_id,
+        "user_id": user["user_id"],
+        "name": title,
+        "created_at": _now(),
+    }
+    STATE["messages"][room_id] = []
+    return _envelope({"chatroom_id": room_id}, "Chatroom created")
+
+
+@app.get("/ChatRoom/chatroom/{chatroom_id}")
+def get_chatroom(
+    chatroom_id: str,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    user = _user_from_token(authorization)
+    _materialize_due_replies()
+    room = _require_room(chatroom_id, user)
+    return _envelope(
+        {
+            "chatroom_id": room["chatroom_id"],
+            "name": room["name"],
+            "created_at": room["created_at"],
+            "messages": list(STATE["messages"].get(chatroom_id, [])),
+        },
+        "Chatroom details fetched",
+    )
+
+
+@app.post("/message/{chatroom_id}/message")
+def send_message(
+    chatroom_id: str,
+    payload: dict[str, Any] = Body(...),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    user = _user_from_token(authorization)
+    _require_room(chatroom_id, user)
+    content = str(payload.get("content", "")).strip()
+    if not content or len(content) > 2000:
+        raise HTTPException(status_code=400, detail="Message must contain 1–2000 characters")
+
+    today = datetime.now(timezone.utc).date().isoformat()
+    if user["message_day"] != today:
+        user["message_day"] = today
+        user["message_count"] = 0
+    if user["subscription_tier"] == "basic" and user["message_count"] >= BASIC_DAILY_LIMIT:
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit exceeded: Basic demo accounts can send 5 messages per day.",
+        )
+    user["message_count"] += 1
+
+    message_id = _id("message")
+    STATE["messages"].setdefault(chatroom_id, []).append(
+        {
+            "message_id": message_id,
+            "content": content,
+            "sender": "user",
+            "created_at": _now(),
+        }
+    )
+    STATE["pending"].append(
+        {
+            "room_id": chatroom_id,
+            "content": content,
+            "due_at": time.monotonic() + REPLY_DELAY_SECONDS,
+        }
+    )
+    return _envelope({"message_id": message_id}, "Message queued for demo assistant")
+
+
+@app.get("/subscribe/subscription/status")
+def subscription_status(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    user = _user_from_token(authorization)
+    return _envelope({"subscription_tier": user["subscription_tier"]}, "Subscription tier fetched")
+
+
+@app.post("/subscribe/pro")
+def subscribe_pro(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    user = _user_from_token(authorization)
+    user["subscription_tier"] = "pro"
+    return _envelope(
+        {"checkout_url": "http://demo.local/payment/success"},
+        "Demo Pro upgrade completed without payment processing",
+    )
+
+
+@app.post("/subscribe/webhook/stripe")
+def demo_stripe_webhook() -> dict[str, Any]:
+    return _envelope({"processed": True}, "Demo webhook acknowledged; no Stripe event was processed")
